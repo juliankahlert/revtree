@@ -64,20 +64,6 @@ class RevTree
     end
   end
 
-  # Calculates the MD5 hash for the file.
-  #
-  # @return [String] the MD5 hash of the file
-  def calculate_file_rev
-    Digest::MD5.file(@path).hexdigest
-  end
-
-  # Calculates the MD5 hash for the directory based on its children.
-  #
-  # @return [String] the MD5 hash of the directory
-  def calculate_directory_rev
-    Digest::MD5.hexdigest(@children.map(&:rev).join)
-  end
-
   # Prints the tree structure, including file names and statuses, to the console.
   #
   # @param indent [Integer] the indentation level (default: 0)
@@ -103,9 +89,8 @@ class RevTree
 
   # Converts the `RevTree` object to JSON format.
   #
-  # @param _args [Array] optional arguments
   # @return [String] a JSON string representing the object
-  def to_json(*_args)
+  def to_json
     JSON.pretty_generate(self.to_h)
   end
 
@@ -135,13 +120,27 @@ class RevTree
   # @yieldparam node [RevTree] the current node being traversed
   # @yieldparam full_path [String] the full path of the current node
   # @return [void]
-  def for_each(status_whitelist, &block)
+  def for_each(status_whitelist = [:unmodified, :modified, :added, :removed], &block)
     return unless block_given?
 
     RevTree.traverse_tree(self, status_whitelist, @path, &block)
   end
 
   private
+
+  # Calculates the MD5 hash for the file.
+  #
+  # @return [String] the MD5 hash of the file
+  def calculate_file_rev
+    Digest::MD5.file(@path).hexdigest
+  end
+
+  # Calculates the MD5 hash for the directory based on its children.
+  #
+  # @return [String] the MD5 hash of the directory
+  def calculate_directory_rev
+    Digest::MD5.hexdigest(@children.map(&:rev).join)
+  end
 
   # Initializes the directory node by traversing its children.
   #
