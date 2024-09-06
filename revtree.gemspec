@@ -1,7 +1,7 @@
 # revtree.gemspec
 Gem::Specification.new do |spec|
   spec.name          = "revtree"
-  spec.version       = "0.1.0"
+  spec.version       = "0.1.1"
   spec.authors       = ["Julian Kahlert"]
   spec.email         = ["90937526+juliankahlert@users.noreply.github.com"]
 
@@ -13,6 +13,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["lib/**/*", "README.md"]
   spec.require_paths = ["lib"]
 
+  spec.add_development_dependency "yard" , "~> 0.9", '>= 0.9.37'
   spec.add_development_dependency "rspec" , "~> 3", '>= 3.4'
   spec.required_ruby_version = ">= 3.0.0"
 end

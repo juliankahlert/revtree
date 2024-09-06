@@ -26,9 +26,31 @@ require 'digest'
 require 'pathname'
 require 'json'
 
+# The `RevTree` class provides a tree structure representing file directories and
+# files, allowing for version tracking based on MD5 hashes.
+#
+# This class can traverse directories, compare versions of trees, and serialize/deserialize
+# itself to/from JSON.
 class RevTree
-  attr_reader :children, :type, :name, :rev, :status
+  # @return [Array<RevTree>] the list of children in the tree (empty for files)
+  attr_reader :children
 
+  # @return [Symbol] the type of the node (:folder or :file)
+  attr_reader :type
+
+  # @return [String] the name of the file or directory
+  attr_reader :name
+
+  # @return [String] the revision (MD5 hash) of the file or directory
+  attr_reader :rev
+
+  # @return [Symbol] the status of the file or directory (:unmodified, :modified, :added, :removed)
+  attr_reader :status
+
+  # Initializes a new `RevTree` object representing a directory or file.
+  #
+  # @param path [String, Pathname] the path to the file or directory
+  # @param whitelist [Array<String>, nil] a list of file patterns to include (optional)
   def initialize(path, whitelist = nil)
     @path = Pathname.new(path)
     @name = @path.basename.to_s
@@ -42,21 +64,33 @@ class RevTree
     end
   end
 
+  # Calculates the MD5 hash for the file.
+  #
+  # @return [String] the MD5 hash of the file
   def calculate_file_rev
     Digest::MD5.file(@path).hexdigest
   end
 
+  # Calculates the MD5 hash for the directory based on its children.
+  #
+  # @return [String] the MD5 hash of the directory
   def calculate_directory_rev
     Digest::MD5.hexdigest(@children.map(&:rev).join)
   end
 
+  # Prints the tree structure, including file names and statuses, to the console.
+  #
+  # @param indent [Integer] the indentation level (default: 0)
+  # @return [void]
   def print_tree(indent = 0)
     status_str = @status ? " (status: #{@status})" : ''
     puts "#{'  ' * indent}#{@type == :folder ? '[Folder]' : '[File]'} #{@name} (rev: #{@rev})#{status_str}"
     @children.each { |child| child.print_tree(indent + 1) }
   end
 
-  # Serialize the RevTree object to JSON
+  # Serializes the `RevTree` object to a hash.
+  #
+  # @return [Hash] a hash representing the object
   def to_h
     {
       type: @type,
@@ -67,14 +101,26 @@ class RevTree
     }
   end
 
+  # Converts the `RevTree` object to JSON format.
+  #
+  # @param _args [Array] optional arguments
+  # @return [String] a JSON string representing the object
   def to_json(*_args)
     JSON.pretty_generate(self.to_h)
   end
 
+  # Reconstructs a `RevTree` object from a hash.
+  #
+  # @param h [Hash] the hash to deserialize
+  # @return [RevTree] the reconstructed `RevTree` object
   def self.from_h(h)
     new_tree(h[:name], h[:type].to_sym, h[:rev], h[:children], h[:status])
   end
 
+  # Reconstructs a `RevTree` object from a JSON string.
+  #
+  # @param json_str [String] the JSON string to deserialize
+  # @return [RevTree] the reconstructed `RevTree` object
   def self.from_json(json_str)
     data = JSON.parse(json_str, symbolize_names: true)
     file_tree = from_h(data)
@@ -82,6 +128,13 @@ class RevTree
     file_tree
   end
 
+  # Executes a block of code for each file matching the provided status whitelist.
+  #
+  # @param status_whitelist [Array<Symbol>] the list of statuses to match (:added, :modified, etc.)
+  # @yield [node, full_path] the block to be executed for each matching file
+  # @yieldparam node [RevTree] the current node being traversed
+  # @yieldparam full_path [String] the full path of the current node
+  # @return [void]
   def for_each(status_whitelist, &block)
     return unless block_given?
 
@@ -90,6 +143,9 @@ class RevTree
 
   private
 
+  # Initializes the directory node by traversing its children.
+  #
+  # @return [void]
   def init_dir
     @type = :folder
     @children = @path.children
@@ -98,12 +154,23 @@ class RevTree
     @rev = calculate_directory_rev
   end
 
+  # Initializes the file node by calculating its revision.
+  #
+  # @return [void]
   def init_file
     @type = :file
     @children = []
     @rev = calculate_file_rev
   end
 
+  # Rebuilds a `RevTree` from its serialized components.
+  #
+  # @param name [String] the name of the node
+  # @param type [Symbol] the type of the node (:folder or :file)
+  # @param rev [String] the revision hash of the node
+  # @param children [Array<Hash>] the child nodes (if any)
+  # @param status [Symbol] the status of the node (:unmodified, :modified, etc.)
+  # @return [RevTree] the reconstructed tree
   def self.new_tree(name, type, rev, children, status = :unmodified)
     tree = allocate
     tree.instance_variable_set(:@name, name)
@@ -118,6 +185,10 @@ class RevTree
     tree
   end
 
+  # Determines whether a file or directory should be included in the tree.
+  #
+  # @param path [Pathname] the path to the file or directory
+  # @return [Boolean] `true` if the path should be included, `false` otherwise
   def include_in_tree?(path)
     return false if path.directory? && path.basename.to_s.start_with?('.')
 
@@ -127,6 +198,11 @@ class RevTree
     @whitelist.any? { |p| File.fnmatch?(p, path.basename.to_s) }
   end
 
+  # Compares two `RevTree` nodes (old and new) and returns a tree with appropriate status.
+  #
+  # @param old [RevTree, nil] the old version of the tree
+  # @param new [RevTree, nil] the new version of the tree
+  # @return [RevTree, nil] the resulting tree with status updates or `nil`
   def self.compare(old, new)
     return nil if old.nil? && new.nil?
 
@@ -140,18 +216,31 @@ class RevTree
     end
   end
 
+  # Handles the addition of a new node.
+  #
+  # @param new [RevTree] the new node
+  # @return [RevTree] the node with the status set to `:added`
   def self.handle_addition(new)
     with_status = new.dup
     with_status.instance_variable_set(:@status, :added)
     with_status
   end
 
+  # Handles the removal of an old node.
+  #
+  # @param old [RevTree] the old node
+  # @return [RevTree] the node with the status set to `:removed`
   def self.handle_removal(old)
     with_status = old.dup
     with_status.instance_variable_set(:@status, :removed)
     with_status
   end
 
+  # Handles the modification of a node.
+  #
+  # @param old [RevTree] the old node
+  # @param new [RevTree] the new node
+  # @return [RevTree] the node with the status set to `:modified`
   def self.handle_modification(old, new)
     if old.type == :folder && new.type == :folder
       compare_folders(old, new, :modified)
@@ -162,6 +251,12 @@ class RevTree
     end
   end
 
+  # Compares two folder nodes and returns a merged node with status updates.
+  #
+  # @param old [RevTree] the old folder node
+  # @param new [RevTree] the new folder node
+  # @param status [Symbol] the status to apply (:modified or :unmodified)
+  # @return [RevTree] the resulting folder node with status updates
   def self.compare_folders(old, new, status)
     combined_children = merge_children(old.children, new.children)
     with_status = new.dup
@@ -174,6 +269,11 @@ class RevTree
     with_status
   end
 
+  # Handles the unmodified status of a node.
+  #
+  # @param old [RevTree] the old node
+  # @param new [RevTree] the new node
+  # @return [RevTree] the node with the status set to `:unmodified`
   def self.handle_unmodified(old, new)
     if old.type == :folder && new.type == :folder
       compare_folders(old, new, :unmodified)
@@ -184,6 +284,11 @@ class RevTree
     end
   end
 
+  # Merges the children of two nodes.
+  #
+  # @param old_children [Array<RevTree>] the children of the old node
+  # @param new_children [Array<RevTree>] the children of the new node
+  # @return [Array<Array<RevTree, RevTree>>] an array of paired old and new children
   def self.merge_children(old_children, new_children)
     all_names = (old_children.map(&:name) + new_children.map(&:name)).uniq
     all_names.map do |name|
@@ -193,6 +298,15 @@ class RevTree
     end
   end
 
+  # Traverses the tree and executes a block for each file matching the provided status whitelist.
+  #
+  # @param node [RevTree] the current node being traversed
+  # @param status_whitelist [Array<Symbol>] the list of statuses to match
+  # @param current_path [Pathname] the current path
+  # @yield [node, full_path] the block to be executed for each matching file
+  # @yieldparam node [RevTree] the current node being traversed
+  # @yieldparam full_path [String] the full path of the current node
+  # @return [void]
   def self.traverse_tree(node, status_whitelist, current_path, &block)
     if node.type == :file && status_whitelist.include?(node.status)
       block.call(node, File.expand_path(current_path.to_s))

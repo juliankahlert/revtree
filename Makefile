@@ -21,6 +21,7 @@ revtree-$(VERSION).gem: revtree.gemspec lib/revtree.rb Gemfile.lock
 test: Gemfile.lock
 	bundler install
 	rufo -c lib/
+	yard
 	rspec
 
 .PHONY: all clean install uninstall test

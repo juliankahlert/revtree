@@ -16,6 +16,7 @@ GEM
       rspec-support (~> 3.13.0)
     rspec-support (3.13.1)
     rufo (0.18.0)
+    yard (0.9.37)
 
 PLATFORMS
   aarch64-linux
@@ -24,6 +25,7 @@ PLATFORMS
 DEPENDENCIES
   rspec (~> 3, >= 3.4)
   rufo
+  yard (~> 0.9, >= 0.9.37)
 
 BUNDLED WITH
    2.5.18
