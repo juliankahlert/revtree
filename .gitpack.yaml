@@ -1,0 +1,11 @@
+---
+gitpack:
+  name: revtree
+  category: lib
+  files: []
+  add:
+  - sh:
+    - sudo make install
+  rm:
+  - sh:
+    - sudo make uninstall
