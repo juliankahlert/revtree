@@ -1,0 +1,116 @@
+# RevTree
+
+## Introduction
+
+`RevTree` is a Ruby library for tracking and comparing directory structures.
+It calculates the MD5 hash for files and directories to determine their revisions and supports detecting changes like additions, removals, and modifications.
+It also provides methods to print and serialize the tree structure, as well as traverse it for specific statuses.
+
+## Features
+
+- **Directory and File Tracking**: Handles both directories and files, including recursive directory structures.
+- **Revision Tracking**: Computes and tracks revisions using MD5 hashes.
+- **Change Detection**: Identifies and marks changes such as additions, deletions, and modifications.
+- **Serialization**: Supports serialization to and from JSON format for easy storage and transfer.
+- **Pretty Printing**: Provides a method to print the directory tree with statuses.
+- **Iterate with `for_each`**: Traverse the tree and apply a block to files matching specific statuses.
+
+## Install
+
+The supported tools are:
+- gitpack
+- make
+- gem
+
+### gitpack
+```sh
+gitpack add juliankahlert/revtree
+```
+
+### make
+```sh
+git clone https://github.com/juliankahlert/revtree.git
+cd revtree
+sudo make install
+```
+
+### gem (local)
+```sh
+git clone https://github.com/juliankahlert/revtree.git
+cd revtree
+gem build revtree.gemspec
+sudo gem install --local revtree-0.1.0.gem
+```
+
+## API Documentation
+
+### `RevTree.new(path, whitelist = nil)`
+
+- **Parameters**:
+  - `path` (String): The path to the file or directory.
+  - `whitelist` (Array<String>): List of patterns to include in the tree.
+
+### `#print_tree(indent = 0)`
+
+- **Parameters**:
+  - `indent` (Integer): Number of spaces to indent each level of the tree.
+
+### `#to_h`
+
+- **Returns**: A Hash representation of the RevTree object.
+
+### `#to_json`
+
+- **Returns**: A JSON representation of the RevTree object.
+
+### `#for_each(status_whitelist, &block)`
+
+- **Parameters**:
+  - `status_whitelist` (Array<Symbol>): List of statuses to include (e.g., `[:added, :removed]`).
+  - `&block` (Proc): A block to execute for each file matching the given statuses.
+- **Behavior**: Iterates over files in the tree, executing the block for each file whose status matches one of the statuses in the whitelist.
+
+### `RevTree.from_h(h)`
+
+- **Parameters**:
+  - `h` (Hash): A hash representation of a RevTree object.
+- **Returns**: A RevTree object.
+
+### `RevTree.from_json(json_str)`
+
+- **Parameters**:
+  - `json_str` (String): A JSON string representing a RevTree object.
+- **Returns**: A RevTree object.
+
+## Example Usage
+
+```ruby
+#!/bin/env ruby
+
+require 'revtree'
+
+# Let's simulate two different directory structures to compare
+file_tree_old = RevTree.new('./', ['*.rb', '*.md'])
+file_tree_new = RevTree.new('./', ['*.rb'])
+
+# Compare the two trees
+result_tree = RevTree.compare(file_tree_old, file_tree_new)
+
+# Print the resulting tree with change statuses
+result_tree.print_tree
+
+# Example of using for_each
+result_tree.for_each([:added, :removed]) do |file, full_path|
+  p "File #{file.name} in #{full_path} was added/removed"
+end
+```
+
+## Encouragement for Contribution
+
+Contributions from the community are welcome!
+If you find any issues or have ideas for new features, please feel free to submit a pull request or open an issue.
+Your input helps make RevTree better for everyone.
+
+## License
+
+RevTree is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
