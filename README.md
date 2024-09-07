@@ -14,6 +14,8 @@ It also provides methods to print and serialize the tree structure, as well as t
 - **Serialization**: Supports serialization to and from JSON format for easy storage and transfer.
 - **Pretty Printing**: Provides a method to print the directory tree with statuses.
 - **Iterate with `for_each`**: Traverse the tree and apply a block to files matching specific statuses.
+- **Watch for Changes**: Automatically monitors a directory for changes with `watch`, and triggers actions based on file changes.
+- **Customizable Watch Interval**: Set a custom interval between checks with the `with_interval` method.
 
 ## Install
 
@@ -70,6 +72,18 @@ sudo gem install --local revtree-0.1.1.gem
   - `&block` (Proc): A block to execute for each file matching the given statuses.
 - **Behavior**: Iterates over files in the tree, executing the block for each file whose status matches one of the statuses in the whitelist.
 
+### `#watch(status_whitelist = [:modified, :added, :removed], &block)`
+
+- **Parameters**:
+  - `status_whitelist` (Array<Symbol>): List of statuses to watch (e.g., `[:added, :removed]`).
+  - `&block` (Proc): A block to execute when a file matching the given statuses is changed.
+
+### `#with_interval(interval)`
+
+- **Parameters**:
+  - `interval` (Integer): Interval (in seconds) between checks for changes.
+- **Returns**: The `RevTree` instance, enabling method chaining.
+
 ### `RevTree.from_h(h)`
 
 - **Parameters**:
@@ -83,6 +97,8 @@ sudo gem install --local revtree-0.1.1.gem
 - **Returns**: A RevTree object.
 
 ## Example Usage
+
+### Comparing two directory structures
 
 ```ruby
 #!/bin/env ruby
@@ -104,6 +120,24 @@ result_tree.for_each([:added, :removed]) do |file, full_path|
   p "File #{file.name} in #{full_path} was added/removed"
 end
 ```
+
+### Watching a directory for changes
+
+```ruby
+#!/bin/env ruby
+
+require 'revtree'
+
+# Create a RevTree for the current directory, including only .rb and .md files
+file_tree = RevTree.new('./', ['*.rb', '*.md'])
+
+# Watch for changes in the directory
+file_tree.with_interval(10).watch([:modified, :added, :removed]) do |file, full_path|
+  puts "File #{file.name} #{file.status} in #{full_path}"
+end
+```
+
+This second example demonstrates the `watch` method, which continuously monitors the directory tree for changes and triggers a block of code when changes (additions, modifications, or deletions) are detected. The `with_interval` method customizes the time between checks.
 
 ## Encouragement for Contribution
 
