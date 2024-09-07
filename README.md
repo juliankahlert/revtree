@@ -1,4 +1,5 @@
 # RevTree
+[![Gem Version](https://badge.fury.io/rb/revtree.svg)](https://badge.fury.io/rb/revtree)
 
 ## Introduction
 
