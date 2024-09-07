@@ -1,4 +1,5 @@
 require 'simplecov'
+require 'simplecov-cobertura'
 require 'simplecov-console'
 
 SimpleCov.start do
@@ -7,6 +8,7 @@ SimpleCov.start do
 
   SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::CoberturaFormatter,
     SimpleCov::Formatter::Console,
   ])
 end
