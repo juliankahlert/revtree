@@ -51,11 +51,15 @@ class RevTree
   #
   # @param path [String, Pathname] the path to the file or directory
   # @param whitelist [Array<String>, nil] a list of file patterns to include (optional)
-  def initialize(path, whitelist = nil)
+  def initialize(path, whitelist = ['*'])
     @path = Pathname.new(path)
     @name = @path.basename.to_s
-    @whitelist = whitelist || []
+    @whitelist = whitelist
     @status = :unmodified
+    @type = :folder
+    @children = []
+    @interval = 5
+    @rev = ''
 
     if @path.directory?
       init_dir
@@ -69,8 +73,8 @@ class RevTree
   # @param indent [Integer] the indentation level (default: 0)
   # @return [void]
   def print_tree(indent = 0)
-    status_str = @status ? " (status: #{@status})" : ''
-    puts "#{'  ' * indent}#{@type == :folder ? '[Folder]' : '[File]'} #{@name} (rev: #{@rev})#{status_str}"
+    indent_prefix = '  ' * indent
+    puts "#{indent_prefix}#{type_to_str()} #{@name} (rev: #{@rev}) #{status_to_str()}"
     @children.each { |child| child.print_tree(indent + 1) }
   end
 
@@ -96,10 +100,12 @@ class RevTree
 
   # Reconstructs a `RevTree` object from a hash.
   #
-  # @param h [Hash] the hash to deserialize
+  # @param hash [Hash] the hash to deserialize
   # @return [RevTree] the reconstructed `RevTree` object
-  def self.from_h(h)
-    new_tree(h[:name], h[:type].to_sym, h[:rev], h[:children], h[:status])
+  def self.from_h(hash)
+    hash[:status] = hash[:status].to_sym
+    hash[:type] = hash[:type].to_sym
+    new_tree(hash)
   end
 
   # Reconstructs a `RevTree` object from a JSON string.
@@ -138,23 +144,12 @@ class RevTree
   # @return [void]
   def watch(status_whitelist = [:modified, :added, :removed], &block)
     current_tree = self
-    @interval ||= 5
+    setup_traps
 
-    Signal.trap('INT') { exit }
-    Signal.trap('TERM') { exit }
     loop do
       sleep @interval
 
-      new_tree = RevTree.new(@path, @whitelist)
-      diff_tree = RevTree.compare(current_tree, new_tree)
-
-      next if diff_tree.nil?
-
-      diff_tree.for_each(status_whitelist) do |node, full_path|
-        block.call(node, full_path)
-      end
-
-      current_tree = new_tree
+      current_tree = refresh_tree(current_tree, status_whitelist, block)
     end
   end
 
@@ -168,6 +163,45 @@ class RevTree
   end
 
   private
+
+  # Refreshes the tree by comparing the current tree with a new version and executing a block
+  # for each file that matches the given statuses.
+  #
+  # @param current_tree [RevTree] the current RevTree instance
+  # @param status_whitelist [Array<Symbol>] the list of statuses to match (e.g., :added, :modified, :removed)
+  # @param block [Proc] the block to execute for each file matching the statuses
+  # @return [RevTree] the updated RevTree with changes
+  def refresh_tree(current_tree, status_whitelist, block)
+    new_tree = RevTree.new(@path, @whitelist)
+    diff_tree = RevTree.compare(current_tree, new_tree)
+    return current_tree unless diff_tree
+
+    diff_tree.for_each(status_whitelist, &block)
+
+    new_tree
+  end
+
+  # Setup traps.
+  #
+  # @return [void]
+  def setup_traps
+    Signal.trap('INT') { exit }
+    Signal.trap('TERM') { exit }
+  end
+
+  # Stringify the type for pretty-printing.
+  #
+  # @return [String] the type string
+  def type_to_str
+    @type == :folder ? '[Folder]' : '[File]'
+  end
+
+  # Stringify the status for pretty-printing.
+  #
+  # @return [String] the status string
+  def status_to_str
+    @status ? "(status: #{@status})" : ''
+  end
 
   # Calculates the MD5 hash for the file.
   #
@@ -187,10 +221,9 @@ class RevTree
   #
   # @return [void]
   def init_dir
-    @type = :folder
     @children = @path.children
-      .select { |c| include_in_tree?(c) }
-      .map { |c| RevTree.new(c, @whitelist) }
+      .select { |child| include_in_tree?(child) }
+      .map { |child| RevTree.new(child, @whitelist) }
     @rev = calculate_directory_rev
   end
 
@@ -199,30 +232,48 @@ class RevTree
   # @return [void]
   def init_file
     @type = :file
-    @children = []
     @rev = calculate_file_rev
+  end
+
+  # Apply attributes from a `Hash` to a `RevTree`.
+  #
+  # @param revtree [RevTree] the tree node to be modified
+  # @param attr_hash [Hash] the hash containing the attributes
+  # @return [void]
+  def self.apply_attributes(revtree, attr_hash)
+    revtree.instance_variable_set(:@name, attr_hash[:name])
+    revtree.instance_variable_set(:@type, attr_hash[:type])
+    revtree.instance_variable_set(:@rev, attr_hash[:rev])
+    revtree.instance_variable_set(:@status, attr_hash[:status])
+    revtree.instance_variable_set(:@children, attr_hash[:children])
+  end
+
+  # Recurse into child nodes to deserialize `RevTree`.
+  #
+  # @param hash [Hash] the hash to deserialize
+  # @return [void]
+  def self.new_tree_recurse_children(hash)
+    children = hash[:children] || []
+    hash[:children] = children.map { |child| from_h(child) }
   end
 
   # Rebuilds a `RevTree` from its serialized components.
   #
-  # @param name [String] the name of the node
-  # @param type [Symbol] the type of the node (:folder or :file)
-  # @param rev [String] the revision hash of the node
-  # @param children [Array<Hash>] the child nodes (if any)
-  # @param status [Symbol] the status of the node (:unmodified, :modified, etc.)
+  # @param hash [Hash] the hash to deserialize
   # @return [RevTree] the reconstructed tree
-  def self.new_tree(name, type, rev, children, status = :unmodified)
+  def self.new_tree(hash)
     tree = allocate
-    tree.instance_variable_set(:@name, name)
-    tree.instance_variable_set(:@type, type.to_sym)
-    tree.instance_variable_set(:@rev, rev)
-    tree.instance_variable_set(:@status, status.to_sym)
-    if type == :folder && children
-      tree.instance_variable_set(:@children, children.map { |c| from_h(c) })
-    else
-      tree.instance_variable_set(:@children, [])
-    end
+    new_tree_recurse_children(hash)
+    apply_attributes(tree, hash)
     tree
+  end
+
+  # Determines whether a path is a dot directory.
+  #
+  # @param path [Pathname] the path to the file or directory
+  # @return [Boolean] `true` if path is a dot directory, `false` otherwise
+  def self.path_is_dot_dir?(path)
+    path.directory? && path.basename.to_s.start_with?('.')
   end
 
   # Determines whether a file or directory should be included in the tree.
@@ -230,12 +281,12 @@ class RevTree
   # @param path [Pathname] the path to the file or directory
   # @return [Boolean] `true` if the path should be included, `false` otherwise
   def include_in_tree?(path)
-    return false if path.directory? && path.basename.to_s.start_with?('.')
+    return false if RevTree.path_is_dot_dir?(path)
 
     return true if path.directory?
     return true if @whitelist.empty?
 
-    @whitelist.any? { |p| File.fnmatch?(p, path.basename.to_s) }
+    @whitelist.any? { |pattern| File.fnmatch?(pattern, path.basename.to_s) }
   end
 
   # Compares two `RevTree` nodes (old and new) and returns a tree with appropriate status.
@@ -244,16 +295,13 @@ class RevTree
   # @param new [RevTree, nil] the new version of the tree
   # @return [RevTree, nil] the resulting tree with status updates or `nil`
   def self.compare(old, new)
-    return nil if old.nil? && new.nil?
+    return nil unless old || new
 
-    return handle_addition(new) if old.nil?
-    return handle_removal(old) if new.nil?
+    return handle_addition(new) unless old
+    return handle_removal(old) unless new
 
-    if old.rev != new.rev
-      return handle_modification(old, new)
-    else
-      return handle_unmodified(old, new)
-    end
+    status = old.rev != new.rev ? :modified : :unmodified
+    handle_modification(old, new, status)
   end
 
   # Handles the addition of a new node.
@@ -280,13 +328,14 @@ class RevTree
   #
   # @param old [RevTree] the old node
   # @param new [RevTree] the new node
+  # @param status [Symbol] the status to apply (:modified or :unmodified)
   # @return [RevTree] the node with the status set to `:modified`
-  def self.handle_modification(old, new)
+  def self.handle_modification(old, new, status)
     if old.type == :folder && new.type == :folder
-      compare_folders(old, new, :modified)
+      compare_folders(old, new, status)
     else
       with_status = new.dup
-      with_status.instance_variable_set(:@status, :modified)
+      with_status.instance_variable_set(:@status, status)
       with_status
     end
   end
@@ -300,7 +349,9 @@ class RevTree
   def self.compare_folders(old, new, status)
     combined_children = merge_children(old.children, new.children)
     with_status = new.dup
-    merged = combined_children.map { |o, n| compare(o, n) }
+    merged = combined_children.map do |old_child, new_child|
+      compare(old_child, new_child)
+    end
 
     folder_status = merged.any? { |child| child.status == :modified } ? :modified : status
 
@@ -309,33 +360,20 @@ class RevTree
     with_status
   end
 
-  # Handles the unmodified status of a node.
-  #
-  # @param old [RevTree] the old node
-  # @param new [RevTree] the new node
-  # @return [RevTree] the node with the status set to `:unmodified`
-  def self.handle_unmodified(old, new)
-    if old.type == :folder && new.type == :folder
-      compare_folders(old, new, :unmodified)
-    else
-      with_status = new.dup
-      with_status.instance_variable_set(:@status, :unmodified)
-      with_status
-    end
-  end
-
   # Merges the children of two nodes.
   #
-  # @param old_children [Array<RevTree>] the children of the old node
-  # @param new_children [Array<RevTree>] the children of the new node
   # @return [Array<Array<RevTree, RevTree>>] an array of paired old and new children
   def self.merge_children(old_children, new_children)
     all_names = (old_children.map(&:name) + new_children.map(&:name)).uniq
-    all_names.map do |name|
-      old_child = old_children.find { |child| child.name == name }
-      new_child = new_children.find { |child| child.name == name }
-      [old_child, new_child]
-    end
+    all_names.map { |name| find_child_pair(name, old_children, new_children) }
+  end
+
+  # @param old_children [Array<RevTree>] the children of the old node
+  # @param new_children [Array<RevTree>] the children of the new node
+  def self.find_child_pair(name, old_children, new_children)
+    old_child = old_children.find { |old| old.name == name }
+    new_child = new_children.find { |new| new.name == name }
+    [old_child, new_child]
   end
 
   # Traverses the tree and executes a block for each file matching the provided status whitelist.
@@ -349,14 +387,11 @@ class RevTree
   # @yieldparam full_path [String] the full path of the current node
   # @return [void]
   def self.traverse_tree(node, status_whitelist, root, current_path, &block)
-    full_path = if current_path
-        File.join(current_path.to_s, node.name.to_s)
-      else
-        root
-      end
+    current_path = current_path.to_s
+    full_path = current_path == '' ? root : File.join(current_path, node.name.to_s)
 
     if node.type == :file && status_whitelist.include?(node.status)
-      block.call(node, File.expand_path(current_path.to_s))
+      block.call(node, File.expand_path(current_path))
     end
 
     node.children.each do |child|
