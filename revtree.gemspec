@@ -1,12 +1,12 @@
 # revtree.gemspec
 Gem::Specification.new do |spec|
   spec.name = 'revtree'
-  spec.version = '0.1.1'
+  spec.version = '0.1.2'
   spec.authors = ['Julian Kahlert']
   spec.email = ['90937526+juliankahlert@users.noreply.github.com']
 
   spec.summary = %q{A tool to build and compare file trees with revisions.}
-  spec.description = %q{RevTree builds a recursive directory tree and compares file revisions. It can mark files and folders as added, removed, modified, or unmodified.}
+  spec.description = %q{RevTree builds a recursive directory tree and compares file revisions. It can mark files and folders as added, removed, modified, or unmodified. For convenience, RevTree also allows you to watch for changes in a directory tree.}
   spec.homepage = 'https://github.com/juliankahlert/revtree'
   spec.license = 'MIT'
 
