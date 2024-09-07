@@ -1,5 +1,5 @@
 # RevTree
-[![Gem Version](https://badge.fury.io/rb/revtree.svg)](https://badge.fury.io/rb/revtree)
+![GitHub Tag](https://img.shields.io/github/v/tag/juliankahlert/revtree) ![Gem Version](https://img.shields.io/gem/v/revtree)
 
 ## Introduction
 
