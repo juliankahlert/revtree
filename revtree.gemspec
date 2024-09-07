@@ -1,7 +1,7 @@
 # revtree.gemspec
 Gem::Specification.new do |spec|
   spec.name = 'revtree'
-  spec.version = '0.1.3'
+  spec.version = '0.1.4'
   spec.authors = ['Julian Kahlert']
   spec.email = ['90937526+juliankahlert@users.noreply.github.com']
 
@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.license = 'MIT'
 
   spec.metadata['homepage_uri'] = 'https://juliankahlert.github.io/revtree/'
-  spec.metadata['documentation_uri'] = 'https://www.rubydoc.info/gems/revtree/0.1.3'
+  spec.metadata['documentation_uri'] = 'https://www.rubydoc.info/gems/revtree/0.1.4'
   spec.metadata['source_code_uri'] = 'https://github.com/juliankahlert/revtree'
 
   spec.files = Dir['lib/**/*', 'README.md']
