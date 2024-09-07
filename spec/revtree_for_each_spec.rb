@@ -78,7 +78,7 @@ RSpec.describe RevTree do
     it 'calls the block for files with statuses in the whitelist' do
       statuses = [:added, :removed]
       results = []
-      revtree.for_each(statuses) do |file, full_path|
+      revtree.for_each(statuses) do |file, _full_path|
         results << { name: file.name, status: file.status }
       end
 
@@ -92,7 +92,7 @@ RSpec.describe RevTree do
       statuses = [:added]
       results = []
 
-      revtree.for_each(statuses) do |file, full_path|
+      revtree.for_each(statuses) do |file, _full_path|
         results << { name: file.name, status: file.status }
       end
 
@@ -105,7 +105,7 @@ RSpec.describe RevTree do
       statuses = []
       results = []
 
-      revtree.for_each(statuses) do |file, full_path|
+      revtree.for_each(statuses) do |file, _full_path|
         results << { name: file.name, status: file.status }
       end
 
