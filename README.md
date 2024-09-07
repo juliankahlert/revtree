@@ -1,5 +1,7 @@
 # RevTree
-![GitHub Tag](https://img.shields.io/github/v/tag/juliankahlert/revtree) ![Gem Version](https://img.shields.io/gem/v/revtree)
+
+[![GitHub Tag](https://img.shields.io/github/v/tag/juliankahlert/revtree)](https://github.com/juliankahlert/revtree)
+[![Gem Version](https://img.shields.io/gem/v/revtree)](https://rubygems.org/gems/revtree)
 
 ## Introduction
 
@@ -21,16 +23,19 @@ It also provides methods to print and serialize the tree structure, as well as t
 ## Install
 
 The supported tools are:
+
 - gitpack
 - make
 - gem
 
 ### gitpack
+
 ```sh
 gitpack add juliankahlert/revtree
 ```
 
 ### make
+
 ```sh
 git clone https://github.com/juliankahlert/revtree.git
 cd revtree
@@ -38,6 +43,7 @@ sudo make install
 ```
 
 ### gem (local)
+
 ```sh
 git clone https://github.com/juliankahlert/revtree.git
 cd revtree
@@ -50,52 +56,52 @@ sudo gem install --local revtree-0.1.5.gem
 ### `RevTree.new(path, whitelist = nil)`
 
 - **Parameters**:
-  - `path` (String): The path to the file or directory.
-  - `whitelist` (Array<String>): List of patterns to include in the tree.
+  - `path` (`String`): The path to the file or directory.
+  - `whitelist` (`Array<String>`): List of patterns to include in the tree.
 
 ### `#print_tree(indent = 0)`
 
 - **Parameters**:
-  - `indent` (Integer): Number of spaces to indent each level of the tree.
+  - `indent` (`Integer`): Number of spaces to indent each level of the tree.
 
 ### `#to_h`
 
-- **Returns**: A Hash representation of the RevTree object.
+- **Returns**: A `Hash` representation of the `RevTree` object.
 
 ### `#to_json`
 
-- **Returns**: A JSON representation of the RevTree object.
+- **Returns**: A `JSON` representation of the `RevTree` object.
 
 ### `#for_each(status_whitelist, &block)`
 
 - **Parameters**:
-  - `status_whitelist` (Array<Symbol>): List of statuses to include (e.g., `[:added, :removed]`).
-  - `&block` (Proc): A block to execute for each file matching the given statuses.
+  - `status_whitelist` (`Array<Symbol>`): List of statuses to include (e.g., `[:added, :removed]`).
+  - `&block` (`Proc`): A block to execute for each file matching the given statuses.
 - **Behavior**: Iterates over files in the tree, executing the block for each file whose status matches one of the statuses in the whitelist.
 
 ### `#watch(status_whitelist = [:modified, :added, :removed], &block)`
 
 - **Parameters**:
-  - `status_whitelist` (Array<Symbol>): List of statuses to watch (e.g., `[:added, :removed]`).
-  - `&block` (Proc): A block to execute when a file matching the given statuses is changed.
+  - `status_whitelist` (`Array<Symbol>`): List of statuses to watch (e.g., `[:added, :removed]`).
+  - `&block` (`Proc`): A block to execute when a file matching the given statuses is changed.
 
 ### `#with_interval(interval)`
 
 - **Parameters**:
-  - `interval` (Integer): Interval (in seconds) between checks for changes.
+  - `interval` (`Integer`): Interval (in seconds) between checks for changes.
 - **Returns**: The `RevTree` instance, enabling method chaining.
 
 ### `RevTree.from_h(h)`
 
 - **Parameters**:
-  - `h` (Hash): A hash representation of a RevTree object.
-- **Returns**: A RevTree object.
+  - `h` (`Hash`): A `Hash` representation of a `RevTree` object.
+- **Returns**: A `RevTree` object.
 
 ### `RevTree.from_json(json_str)`
 
 - **Parameters**:
-  - `json_str` (String): A JSON string representing a RevTree object.
-- **Returns**: A RevTree object.
+  - `json_str` (`String`): A `JSON` string representing a `RevTree` object.
+- **Returns**: A `RevTree` object.
 
 ## Example Usage
 
