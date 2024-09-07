@@ -46,6 +46,11 @@ jobs:
         with:
           ruby-version: '3.0'
 
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+
       - name: Build the gem
         run: make
 

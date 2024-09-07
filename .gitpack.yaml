@@ -5,6 +5,7 @@ gitpack:
   files: []
   add:
   - sh:
+    - make all
     - sudo make install
   rm:
   - sh:
