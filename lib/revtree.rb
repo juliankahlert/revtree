@@ -123,7 +123,7 @@ class RevTree
   def for_each(status_whitelist = [:unmodified, :modified, :added, :removed], &block)
     return unless block_given?
 
-    RevTree.traverse_tree(self, status_whitelist, @path, &block)
+    RevTree.traverse_tree(self, status_whitelist, @path, nil, &block)
   end
 
   # Watches the tree for changes
@@ -342,20 +342,25 @@ class RevTree
   #
   # @param node [RevTree] the current node being traversed
   # @param status_whitelist [Array<Symbol>] the list of statuses to match
+  # @param root [Pathname] the root path
   # @param current_path [Pathname] the current path
   # @yield [node, full_path] the block to be executed for each matching file
   # @yieldparam node [RevTree] the current node being traversed
   # @yieldparam full_path [String] the full path of the current node
   # @return [void]
-  def self.traverse_tree(node, status_whitelist, current_path, &block)
+  def self.traverse_tree(node, status_whitelist, root, current_path, &block)
+    full_path = if current_path
+        File.join(current_path.to_s, node.name.to_s)
+      else
+        root
+      end
+
     if node.type == :file && status_whitelist.include?(node.status)
       block.call(node, File.expand_path(current_path.to_s))
     end
 
-    full_path = File.join(current_path.to_s, node.name.to_s)
-
     node.children.each do |child|
-      traverse_tree(child, status_whitelist, full_path, &block)
+      traverse_tree(child, status_whitelist, root, full_path, &block)
     end
   end
 end
