@@ -41,7 +41,7 @@ sudo make install
 git clone https://github.com/juliankahlert/revtree.git
 cd revtree
 gem build revtree.gemspec
-sudo gem install --local revtree-0.1.2.gem
+sudo gem install --local revtree-0.1.3.gem
 ```
 
 ## API Documentation
