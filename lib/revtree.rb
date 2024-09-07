@@ -126,6 +126,47 @@ class RevTree
     RevTree.traverse_tree(self, status_whitelist, @path, &block)
   end
 
+  # Watches the tree for changes
+  #
+  # Compares the refreshed tree to its last version and calls the provided block
+  # for each node that matches the statuses in the `status_whitelist`.
+  #
+  # @param status_whitelist [Array<Symbol>] the list of statuses to match (:added, :modified, etc.)
+  # @yield [node, full_path] the block to be executed for each matching file
+  # @yieldparam node [RevTree] the node that was changed
+  # @yieldparam full_path [String] the full path of the node
+  # @return [void]
+  def watch(status_whitelist = [:modified, :added, :removed], &block)
+    current_tree = self
+    @interval ||= 5
+
+    Signal.trap('INT') { exit }
+    Signal.trap('TERM') { exit }
+    loop do
+      sleep @interval
+
+      new_tree = RevTree.new(@path, @whitelist)
+      diff_tree = RevTree.compare(current_tree, new_tree)
+
+      next if diff_tree.nil?
+
+      diff_tree.for_each(status_whitelist) do |node, full_path|
+        block.call(node, full_path)
+      end
+
+      current_tree = new_tree
+    end
+  end
+
+  # Sets the interval for the watch method's sleep duration.
+  #
+  # @param interval [Integer] the number of seconds to sleep between checks
+  # @return [RevTree] the current instance for chaining
+  def with_interval(interval)
+    @interval = interval
+    self
+  end
+
   private
 
   # Calculates the MD5 hash for the file.
