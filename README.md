@@ -2,6 +2,7 @@
 
 [![GitHub Tag](https://img.shields.io/github/v/tag/juliankahlert/revtree)](https://github.com/juliankahlert/revtree)
 [![Gem Version](https://img.shields.io/gem/v/revtree)](https://rubygems.org/gems/revtree)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ac169e80b46b4d78a1a3e8e15be24c2f)](https://app.codacy.com/gh/juliankahlert/revtree/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ## Introduction
 
