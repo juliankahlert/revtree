@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.metadata['documentation_uri'] = 'https://www.rubydoc.info/gems/revtree/0.1.5'
   spec.metadata['source_code_uri'] = 'https://github.com/juliankahlert/revtree'
 
-  spec.files = Dir['lib/**/*', 'README.md']
+  spec.files = Dir['lib/**/*', 'LICENSE', 'README.md']
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'simplecov-simplecov-cobertura', '~> 2', '>= 2.1'
