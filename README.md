@@ -1,5 +1,6 @@
 # RevTree
 
+[![Build Status](https://github.com/juliankahlert/revtree/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/juliankahlert/revtree)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/t/juliankahlert/revtree)](https://github.com/juliankahlert/revtree/commits/)
 [![GitHub Tag](https://img.shields.io/github/v/tag/juliankahlert/revtree)](https://github.com/juliankahlert/revtree)
 [![Gem Version](https://img.shields.io/gem/v/revtree)](https://rubygems.org/gems/revtree)
