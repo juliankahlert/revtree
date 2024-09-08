@@ -314,35 +314,27 @@ RSpec.describe RevTree do
     JSON
   end
 
-  it 'marks added files correctly' do
+  def ck(new_tree_json, expected_tree_json)
     old_tree = RevTree.from_json(old_tree_json)
-    new_tree = RevTree.from_json(new_tree_json_added)
+    new_tree = RevTree.from_json(new_tree_json)
     result_tree = RevTree.compare(old_tree, new_tree)
     result_json = result_tree.to_json
-    expect(result_json).to eq(expected_tree_json_added.strip)
+    expect(result_json).to eq(expected_tree_json.strip)
+  end
+
+  it 'marks added files correctly' do
+    ck(new_tree_json_added, expected_tree_json_added)
   end
 
   it 'marks removed files correctly' do
-    old_tree = RevTree.from_json(old_tree_json)
-    new_tree = RevTree.from_json(new_tree_json_removed)
-    result_tree = RevTree.compare(old_tree, new_tree)
-    result_json = result_tree.to_json
-    expect(result_json).to eq(expected_tree_json_removed.strip)
+    ck(new_tree_json_removed, expected_tree_json_removed)
   end
 
   it 'marks modified files correctly' do
-    old_tree = RevTree.from_json(old_tree_json)
-    new_tree = RevTree.from_json(new_tree_json_modified)
-    result_tree = RevTree.compare(old_tree, new_tree)
-    result_json = result_tree.to_json
-    expect(result_json).to eq(expected_tree_json_modified.strip)
+    ck(new_tree_json_modified, expected_tree_json_modified)
   end
 
   it 'marks unmodified files correctly' do
-    old_tree = RevTree.from_json(old_tree_json)
-    new_tree = RevTree.from_json(new_tree_json_unmodified)
-    result_tree = RevTree.compare(old_tree, new_tree)
-    result_json = result_tree.to_json
-    expect(result_json).to eq(expected_tree_json_unmodified.strip)
+    ck(new_tree_json_unmodified, expected_tree_json_unmodified)
   end
 end
