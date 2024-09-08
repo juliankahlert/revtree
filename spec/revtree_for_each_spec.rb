@@ -38,18 +38,14 @@ RSpec.describe RevTree do
           name: 'file1.rb',
           rev: 'file1rev',
           status: :added,
-          children: [
-
-          ]
+          children: [],
         },
         {
           type: :file,
           name: 'file2.md',
           rev: 'file2rev',
           status: :removed,
-          children: [
-
-          ]
+          children: [],
         },
         {
           type: :folder,
@@ -62,13 +58,11 @@ RSpec.describe RevTree do
               name: 'file3.rb',
               rev: 'file3rev',
               status: :unmodified,
-              children: [
-
-              ]
-            }
-          ]
-        }
-      ]
+              children: [],
+            },
+          ],
+        },
+      ],
     }
   end
 
