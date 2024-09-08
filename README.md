@@ -1,5 +1,6 @@
 # RevTree
 
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/t/juliankahlert/revtree)](https://github.com/juliankahlert/revtree/commits/)
 [![GitHub Tag](https://img.shields.io/github/v/tag/juliankahlert/revtree)](https://github.com/juliankahlert/revtree)
 [![Gem Version](https://img.shields.io/gem/v/revtree)](https://rubygems.org/gems/revtree)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/ac169e80b46b4d78a1a3e8e15be24c2f)](https://app.codacy.com/gh/juliankahlert/revtree/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
@@ -50,7 +51,7 @@ sudo make install
 git clone https://github.com/juliankahlert/revtree.git
 cd revtree
 gem build revtree.gemspec
-sudo gem install --local revtree-0.1.5.gem
+sudo gem install --local revtree-0.1.6.gem
 ```
 
 ## API Documentation
