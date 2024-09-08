@@ -17,10 +17,11 @@ Gem::Specification.new do |spec|
   spec.files = Dir['lib/**/*', 'LICENSE', 'README.md']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'simplecov-simplecov-cobertura', '~> 2', '>= 2.1'
+  spec.add_development_dependency 'simplecov-cobertura', '~> 2', '>= 2.1'
   spec.add_development_dependency 'simplecov-console', '~> 0.9', '>= 0.9.1'
   spec.add_development_dependency 'simplecov', '~> 0.22', '>= 0.22.0'
   spec.add_development_dependency 'yard', '~> 0.9', '>= 0.9.37'
   spec.add_development_dependency 'rspec', '~> 3', '>= 3.4'
+
   spec.required_ruby_version = '>= 3.0.0'
 end
